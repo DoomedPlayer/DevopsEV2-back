@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  db-despacho:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: db_despacho
+      MYSQL_USER: tu_usuario
+      MYSQL_PASSWORD: tu_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - despacho_db_data:/var/lib/mysql
+
+  despacho-app:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/repo-despacho:latest
+    ports:
+      - "8082:8082"
+    environment:
+      - DB_ENDPOINT=db-despacho
+      - DB_PORT=3306
+      - DB_NAME=db_despacho
+      - DB_USERNAME=admin
+      - DB_PASSWORD=password
+    depends_on:
+      - db-despacho
+
+volumes:
+  despacho_db_data: 

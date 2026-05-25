@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  db-ventas:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: db_ventas
+      MYSQL_USER: tu_usuario
+      MYSQL_PASSWORD: tu_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ventas_db_data:/var/lib/mysql
+
+  ventas-app:
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/repo-ventas:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_ENDPOINT=db-ventas
+      - DB_PORT=3306
+      - DB_NAME=db_ventas
+      - DB_USERNAME=tu_usuario
+      - DB_PASSWORD=tu_password
+    depends_on:
+      - db-ventas
+
+volumes:
+  ventas_db_data: 
