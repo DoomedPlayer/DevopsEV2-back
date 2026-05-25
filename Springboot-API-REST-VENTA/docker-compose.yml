@@ -20,8 +20,8 @@ services:
       - DB_ENDPOINT=db-ventas
       - DB_PORT=3306
       - DB_NAME=db_ventas
-      - DB_USERNAME=tu_usuario
-      - DB_PASSWORD=tu_password
+      - DB_USERNAME=admin
+      - DB_PASSWORD=password
     depends_on:
       - db-ventas
 

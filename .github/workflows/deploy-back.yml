@@ -1,4 +1,4 @@
-name: CI/CD Pipeline Backend
+name: CI/CD Pipeline Microservicios (Vía SSM)
 
 on:
   push:
@@ -24,7 +24,9 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
-    # --- ZONA DE VENTAS ---
+    # ==========================================
+    # DESPLIEGUE DE VENTAS
+    # ==========================================
     - name: Construir y subir imagen de VENTAS
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -34,20 +36,22 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./ventas
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Desplegar VENTAS en su EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_VENTAS }}
-        username: ${{ secrets.EC2_USER_VENTAS }}
-        key: ${{ secrets.EC2_SSH_KEY_VENTAS }}
-        script: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-          docker pull ${{ steps.login-ecr.outputs.registry }}/repo-ventas:latest
-          cd /ruta/en/ec2/ventas
-          docker-compose down
-          docker-compose up -d
+    - name: Actualizar contenedor VENTAS vía SSM
+      run: |
+        aws ssm send-command \
+          --instance-ids "${{ secrets.INSTANCE_ID_VENTAS }}" \
+          --document-name "AWS-RunShellScript" \
+          --parameters '{"commands":[
+            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+            "docker pull ${{ steps.login-ecr.outputs.registry }}/repo-ventas:latest",
+            "cd /home/ec2-user/ventas",
+            "docker-compose down",
+            "docker-compose up -d"
+          ]}'
 
-    # --- ZONA DE DESPACHO ---
+    # ==========================================
+    # DESPLIEGUE DE DESPACHO
+    # ==========================================
     - name: Construir y subir imagen de DESPACHO
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -57,15 +61,15 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./despacho
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Desplegar DESPACHO en su EC2
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.EC2_HOST_DESPACHO }}
-        username: ${{ secrets.EC2_USER_DESPACHO }}
-        key: ${{ secrets.EC2_SSH_KEY_DESPACHO }}
-        script: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-          docker pull ${{ steps.login-ecr.outputs.registry }}/repo-despacho:latest
-          cd /ruta/en/ec2/despacho
-          docker-compose down
-          docker-compose up -d
+    - name: Actualizar contenedor DESPACHO vía SSM
+      run: |
+        aws ssm send-command \
+          --instance-ids "${{ secrets.INSTANCE_ID_DESPACHO }}" \
+          --document-name "AWS-RunShellScript" \
+          --parameters '{"commands":[
+            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+            "docker pull ${{ steps.login-ecr.outputs.registry }}/repo-despacho:latest",
+            "cd /home/ec2-user/despacho",
+            "docker-compose down",
+            "docker-compose up -d"
+          ]}'
