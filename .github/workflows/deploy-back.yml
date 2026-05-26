@@ -34,7 +34,7 @@ jobs:
         ECR_REPOSITORY: ev2/back-ventas
         IMAGE_TAG: latest
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./ventas
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG 
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Actualizar contenedor VENTAS 
@@ -44,7 +44,7 @@ jobs:
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
             "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-            "docker pull ${{ steps.login-ecr.outputs.registry }}/repo-ventas:latest",
+            "docker pull ${{ steps.login-ecr.outputs.registry }}/ev2/back-ventas:latest",
             "cd /home/ec2-user/ventas",
             "docker-compose down",
             "docker-compose up -d"
@@ -60,7 +60,7 @@ jobs:
         ECR_REPOSITORY: ev2/back-despacho
         IMAGE_TAG: latest
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./despacho
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
     - name: Actualizar contenedor DESPACHO vía SSM
@@ -70,7 +70,7 @@ jobs:
           --document-name "AWS-RunShellScript" \
           --parameters '{"commands":[
             "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-            "docker pull ${{ steps.login-ecr.outputs.registry }}/repo-despacho:latest",
+            "docker pull ${{ steps.login-ecr.outputs.registry }}/ev2/back-despacho:latest",
             "cd /home/ec2-user/despacho",
             "docker-compose down",
             "docker-compose up -d"
