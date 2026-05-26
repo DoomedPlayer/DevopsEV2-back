@@ -36,19 +36,34 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    - name: Codificar docker-compose a Base64
+        run: echo "COMPOSE_VENTAS_B64=$(base64 -w 0 ./Springboot-API-REST-VENTA/docker-compose.yml)" >> $GITHUB_ENV
 
     - name: Actualizar contenedor VENTAS 
-      run: |
-        aws ssm send-command \
-          --instance-ids "${{ secrets.INSTANCE_ID_VENTAS }}" \
-          --document-name "AWS-RunShellScript" \
-          --parameters '{"commands":[
-            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-            "docker pull ${{ steps.login-ecr.outputs.registry }}/ev2/back-ventas:latest",
-            "cd /home/ec2-user/ventas",
-            "docker-compose down",
-            "docker-compose up -d"
-          ]}'
+        run: |
+          aws ssm send-command \
+            --instance-ids ${{ secrets.EC2_VENTAS_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Desplegar Ventas " \
+            --parameters '{"commands":[
+              "set -e",
+              
+              "mkdir -p /home/ec2-user/app-ventas",
+              "cd /home/ec2-user/app-ventas",
+              
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+              
+              "echo \"${{ env.COMPOSE_VENTAS_B64 }}\" | base64 -d > docker-compose.yml",
+              
+              "export IMAGE_URL=${{ steps.login-ecr.outputs.registry }}/ev2/back-ventas:latest",
+              
+              "docker pull $IMAGE_URL",
+              
+              "docker-compose down || true",
+              "docker-compose up -d"
+            ]}' \
+            --output text
 
     # ==========================================
     # DESPLIEGUE DE DESPACHO
@@ -63,16 +78,30 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Actualizar contenedor DESPACHO vía SSM
+    - name: Codificar docker-compose Despacho a Base64
+        run: echo "COMPOSE_DESPACHO_B64=$(base64 -w 0 ./Springboot-API-REST-DESPACHO/docker-compose.yml)" >> $GITHUB_ENV
+
+    - name: Actualizar contenedor DESPACHO
       run: |
         aws ssm send-command \
-          --instance-ids "${{ secrets.INSTANCE_ID_DESPACHO }}" \
-          --document-name "AWS-RunShellScript" \
-          --parameters '{"commands":[
-            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
-            "docker pull ${{ steps.login-ecr.outputs.registry }}/ev2/back-despacho:latest",
-            "cd /home/ec2-user/despacho",
-            "docker-compose down",
-            "docker-compose up -d"
-          ]}'
-      
+            --instance-ids ${{ secrets.EC2_DESPACHO_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --comment "Desplegar Despacho AL2023" \
+            --parameters '{"commands":[
+              "set -e",
+              
+              "mkdir -p /home/ec2-user/app-despacho",
+              "cd /home/ec2-user/app-despacho",
+              
+              "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}",
+              
+              "echo \"${{ env.COMPOSE_DESPACHO_B64 }}\" | base64 -d > docker-compose.yml",
+              
+              "export IMAGE_URL=${{ steps.login-ecr.outputs.registry }}/ev2/back-despacho:latest",
+              
+              "docker pull $IMAGE_URL",
+              
+              "docker-compose down || true",
+              "docker-compose up -d"
+            ]}' \
+            --output text

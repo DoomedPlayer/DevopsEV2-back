@@ -2,18 +2,28 @@ version: '3.8'
 services:
   db-despacho:
     image: mysql:8.0
+    container_name: mysql-despacho
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: db_despacho
-      MYSQL_USER: tu_usuario
-      MYSQL_PASSWORD: tu_password
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
     volumes:
       - despacho_db_data:/var/lib/mysql
+    networks:
+      - backend_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
 
   despacho-app:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/repo-despacho:latest
+    image: ${IMAGE_URL}
+    container_name: app-despacho
+    restart: always
     ports:
       - "8082:8082"
     environment:
@@ -23,7 +33,13 @@ services:
       - DB_USERNAME=admin
       - DB_PASSWORD=password
     depends_on:
-      - db-despacho
+      db-despacho:
+        condition: service_healthy
+    networks:
+      - backend_network
 
 volumes:
-  despacho_db_data: 
+  despacho_db_data:
+
+networks:
+  backend_network:

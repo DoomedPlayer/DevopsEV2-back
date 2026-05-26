@@ -5,15 +5,15 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: db_ventas
-      MYSQL_USER: tu_usuario
-      MYSQL_PASSWORD: tu_password
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
     ports:
       - "3306:3306"
     volumes:
       - ventas_db_data:/var/lib/mysql
 
   ventas-app:
-    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/repo-ventas:latest
+    image: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ev2/back-ventas:latest
     ports:
       - "8081:8081"
     environment:
