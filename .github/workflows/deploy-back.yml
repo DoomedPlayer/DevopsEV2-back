@@ -28,15 +28,16 @@ jobs:
     # DESPLIEGUE DE VENTAS
     # ==========================================
     - name: Construir y subir imagen de VENTAS
+      working-directory: ./Springboot-API-REST-VENTA
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: repo-ventas
+        ECR_REPOSITORY: ev2/back-ventas
         IMAGE_TAG: latest
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./ventas
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-    - name: Actualizar contenedor VENTAS vía SSM
+    - name: Actualizar contenedor VENTAS 
       run: |
         aws ssm send-command \
           --instance-ids "${{ secrets.INSTANCE_ID_VENTAS }}" \
@@ -53,9 +54,10 @@ jobs:
     # DESPLIEGUE DE DESPACHO
     # ==========================================
     - name: Construir y subir imagen de DESPACHO
+      working-directory: ./Springboot-API-REST-DESPACHO
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: repo-despacho
+        ECR_REPOSITORY: ev2/back-despacho
         IMAGE_TAG: latest
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./despacho
