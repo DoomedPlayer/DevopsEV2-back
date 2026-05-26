@@ -43,7 +43,7 @@ jobs:
     - name: Actualizar contenedor VENTAS 
       run: |
           aws ssm send-command \
-            --instance-ids ${{ secrets.EC2_VENTAS_INSTANCE_ID }} \
+            --instance-ids ${{ secrets.INSTANCE_ID_VENTAS }} \
             --document-name "AWS-RunShellScript" \
             --comment "Desplegar Ventas " \
             --parameters '{"commands":[
@@ -84,9 +84,9 @@ jobs:
     - name: Actualizar contenedor DESPACHO
       run: |
         aws ssm send-command \
-            --instance-ids ${{ secrets.EC2_DESPACHO_INSTANCE_ID }} \
+            --instance-ids ${{ secrets.INSTANCE_ID_DESPACHO }} \
             --document-name "AWS-RunShellScript" \
-            --comment "Desplegar Despacho AL2023" \
+            --comment "Desplegar Despacho" \
             --parameters '{"commands":[
               "set -e",
               
@@ -105,4 +105,3 @@ jobs:
               "docker-compose up -d"
             ]}' \
             --output text
-            
